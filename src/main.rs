@@ -1,6 +1,8 @@
 use clap::{App, AppSettings, Arg};
 use lazy_static::lazy_static;
 use regex::Regex;
+use reqwest::blocking::Client;
+use reqwest::{Proxy, Url};
 use select::document::Document;
 use select::predicate::Name;
 
@@ -35,26 +37,28 @@ fn main() {
         )
         .get_matches();
 
-    let base_url = app_matches.value_of("url").unwrap();
-    println!("base_url: {}", base_url);
+    let base_url = Url::parse(app_matches.value_of("url").unwrap()).unwrap();
     let proxy = app_matches.value_of("proxy");
-    let mut client = reqwest::blocking::Client::builder();
+    let mut client = Client::builder();
     if let Some(p) = proxy {
         client = client
-            .proxy(reqwest::Proxy::all(p).unwrap())
+            .proxy(Proxy::all(p).unwrap())
             .danger_accept_invalid_certs(true)
     }
     let client = client.build().unwrap();
-    let initial_result = client.get(base_url).send().unwrap();
+    let initial_result = client.get(base_url.as_str()).send().unwrap();
     let body = initial_result.text().unwrap();
     let doc = Document::from(body.as_str());
 
+    println!("body:");
+    println!("{}", body);
+
     println!("a");
-    print_links(base_url, &doc, "a", "href");
+    print_links(base_url.as_str(), &doc, "a", "href");
     println!("script");
-    print_links(base_url, &doc, "script", "src");
+    print_links(base_url.as_str(), &doc, "script", "src");
     println!("link");
-    print_links(base_url, &doc, "link", "href");
+    print_links(base_url.as_str(), &doc, "link", "href");
 }
 
 fn print_links(base_url: &str, document: &Document, tag: &str, attr: &str) {
@@ -77,35 +81,34 @@ fn sanitize_link(base_url: &str, link: &str) -> Option<String> {
         static ref HTTP_PREFIX: Regex = Regex::new("^http").unwrap();
     }
     let maybe_slash = if base_url.ends_with('/') { "" } else { "/" };
+    let sanitized: String;
     if INVALID_LINK_REGEX.is_match(link) {
         println!("Invalid link: {}", link);
         return None;
-    }
-    if DOUBLE_SLASH_PREFIX.is_match(link) {
+    } else if DOUBLE_SLASH_PREFIX.is_match(link) {
         println!("Double slash prefix: {}", link);
-        return Some(format!("https:{}", link));
-    }
-    if SINGLE_SLASH_PREFIX.is_match(link) {
+        sanitized = format!("https:{}", link);
+    } else if SINGLE_SLASH_PREFIX.is_match(link) {
         println!("Single slash prefix: {}", link);
-        return Some(format!(
+        sanitized = format!(
             "{}{}{}",
             base_url,
             maybe_slash,
-            SINGLE_SLASH_PREFIX.replace_all(link, "")
-        ));
-    }
-    if DOT_SLASH_PREFIX.is_match(link) {
+            SINGLE_SLASH_PREFIX.replace(link, "")
+        );
+    } else if DOT_SLASH_PREFIX.is_match(link) {
         println!("Dot slash prefix: {}", link);
-        return Some(format!(
+        sanitized = format!(
             "{}{}{}",
             base_url,
             maybe_slash,
-            DOT_SLASH_PREFIX.replace_all(link, "")
-        ));
-    }
-    if !HTTP_PREFIX.is_match(link) {
+            DOT_SLASH_PREFIX.replace(link, "")
+        );
+    } else if !HTTP_PREFIX.is_match(link) {
         println!("No HTTP prefix: {}", link);
-        return Some(format!("{}{}{}", base_url, maybe_slash, link));
+        sanitized = format!("{}{}{}", base_url, maybe_slash, link);
+    } else {
+        sanitized = String::from(link);
     }
-    Some(String::from(link))
+    Some(sanitized)
 }
