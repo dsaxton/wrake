@@ -1,6 +1,13 @@
 use clap::{App, AppSettings, Arg};
+use lazy_static::lazy_static;
+use regex::Regex;
 use select::document::Document;
 use select::predicate::Name;
+
+// Recursive search
+// Parse more tags
+// Complete relative links
+// Parse URLs and use to optionally exclude certain links from recursion
 
 fn main() {
     let app_matches = App::new("wrake")
@@ -41,7 +48,43 @@ fn main() {
     let body = initial_result.text().unwrap();
     let doc = Document::from(body.as_str());
 
-    doc.find(Name("a"))
-        .filter_map(|n| n.attr("href"))
-        .for_each(|x| println!("{}", x));
+    println!("Body:");
+    println!();
+    println!("{:?}", body);
+    println!();
+    // println!("Document:");
+    // println!();
+    // println!("{:?}", doc);
+    // println!();
+    println!("a:");
+    println!();
+    print_attributes(&doc, "a", "href");
+    println!();
+    println!("script:");
+    println!();
+    print_attributes(&doc, "a", "src");
+    println!("link:");
+    println!();
+    print_attributes(&doc, "a", "href");
+}
+
+fn print_attributes(document: &Document, tag: &str, attr: &str) {
+    document
+        .find(Name(tag))
+        .filter_map(|n| n.attr(attr))
+        .for_each(|x| {
+            if let Some(link) = sanitize_link(x) {
+                println!("{}", link)
+            }
+        });
+}
+
+fn sanitize_link(link: &str) -> Option<&str> {
+    lazy_static! {
+        static ref INVALID_LINK_REGEX: Regex = Regex::new("^(mailto|#|tel|javascript)").unwrap();
+    }
+    if INVALID_LINK_REGEX.is_match(link) {
+        return None;
+    }
+    Some(link)
 }
