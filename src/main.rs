@@ -50,9 +50,6 @@ fn main() {
     let body = initial_result.text().unwrap();
     let doc = Document::from(body.as_str());
 
-    println!("body:");
-    println!("{}", body);
-
     println!("a");
     print_links(base_url.as_str(), &doc, "a", "href");
     println!("script");
@@ -76,8 +73,7 @@ fn sanitize_link(base_url: &str, link: &str) -> Option<String> {
     lazy_static! {
         static ref INVALID_LINK_REGEX: Regex = Regex::new("^(mailto|#|tel|javascript)").unwrap();
         static ref DOUBLE_SLASH_PREFIX: Regex = Regex::new("^//").unwrap();
-        static ref SINGLE_SLASH_PREFIX: Regex = Regex::new("^/").unwrap();
-        static ref DOT_SLASH_PREFIX: Regex = Regex::new("^./").unwrap();
+        static ref RELATIVE_LINK_PREFIX: Regex = Regex::new("^.?/").unwrap();
         static ref HTTP_PREFIX: Regex = Regex::new("^http").unwrap();
     }
     let maybe_slash = if base_url.ends_with('/') { "" } else { "/" };
@@ -88,21 +84,13 @@ fn sanitize_link(base_url: &str, link: &str) -> Option<String> {
     } else if DOUBLE_SLASH_PREFIX.is_match(link) {
         println!("Double slash prefix: {}", link);
         sanitized = format!("https:{}", link);
-    } else if SINGLE_SLASH_PREFIX.is_match(link) {
-        println!("Single slash prefix: {}", link);
+    } else if RELATIVE_LINK_PREFIX.is_match(link) {
+        println!("Relative link prefix: {}", link);
         sanitized = format!(
             "{}{}{}",
             base_url,
             maybe_slash,
-            SINGLE_SLASH_PREFIX.replace(link, "")
-        );
-    } else if DOT_SLASH_PREFIX.is_match(link) {
-        println!("Dot slash prefix: {}", link);
-        sanitized = format!(
-            "{}{}{}",
-            base_url,
-            maybe_slash,
-            DOT_SLASH_PREFIX.replace(link, "")
+            RELATIVE_LINK_PREFIX.replace(link, "")
         );
     } else if !HTTP_PREFIX.is_match(link) {
         println!("No HTTP prefix: {}", link);
