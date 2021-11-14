@@ -76,12 +76,16 @@ fn sanitize_link(base_url: &str, link: &str) -> Option<String> {
         static ref RELATIVE_LINK_PREFIX: Regex = Regex::new("^.?/").unwrap();
         static ref HTTP_PREFIX: Regex = Regex::new("^http").unwrap();
     }
-    let maybe_slash = if base_url.ends_with('/') { "" } else { "/" };
-    let sanitized: String;
+
     if INVALID_LINK_REGEX.is_match(link) {
         println!("Invalid link: {}", link);
         return None;
-    } else if DOUBLE_SLASH_PREFIX.is_match(link) {
+    }
+
+    let maybe_slash = if base_url.ends_with('/') { "" } else { "/" };
+    let sanitized: String;
+
+    if DOUBLE_SLASH_PREFIX.is_match(link) {
         println!("Double slash prefix: {}", link);
         sanitized = format!("https:{}", link);
     } else if RELATIVE_LINK_PREFIX.is_match(link) {
