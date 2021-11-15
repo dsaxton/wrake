@@ -10,7 +10,7 @@ use select::predicate::Name;
 // Parse more tags
 // Correctly handle relative links (what if we are not at the root level?)
 // Parse URLs and use to optionally exclude certain links from recursion
-// Use a domain name instead of full URL
+// Use a domain name instead of full URL, use reqwest::Url methods: https://docs.rs/reqwest/0.3.0/reqwest/struct.Url.html
 
 fn main() {
     let app_matches = App::new("wrake")
@@ -69,13 +69,13 @@ fn print_links(base_url: &str, document: &Document, tag: &str, attr: &str) {
 
 fn sanitize_link(base_url: &str, link: &str) -> Option<String> {
     lazy_static! {
-        static ref INVALID_LINK_REGEX: Regex = Regex::new("^(mailto|#|tel|javascript)").unwrap();
+        static ref BAD_LINK_REGEX: Regex = Regex::new("^(mailto|#|tel|javascript)").unwrap();
         static ref DOUBLE_SLASH_PREFIX: Regex = Regex::new("^//").unwrap();
         static ref RELATIVE_LINK_PREFIX: Regex = Regex::new("^.?/").unwrap();
         static ref HTTP_PREFIX: Regex = Regex::new("^http").unwrap();
     }
 
-    if INVALID_LINK_REGEX.is_match(link) {
+    if BAD_LINK_REGEX.is_match(link) {
         return None;
     }
 
