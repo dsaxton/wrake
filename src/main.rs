@@ -10,6 +10,7 @@ use select::predicate::Name;
 // Parse more tags
 // Correctly handle relative links (what if we are not at the root level?)
 // Parse URLs and use to optionally exclude certain links from recursion
+// Use a domain name instead of full URL
 
 fn main() {
     let app_matches = App::new("wrake")
@@ -50,11 +51,8 @@ fn main() {
     let body = initial_result.text().unwrap();
     let doc = Document::from(body.as_str());
 
-    println!("a");
     print_links(base_url.as_str(), &doc, "a", "href");
-    println!("script");
     print_links(base_url.as_str(), &doc, "script", "src");
-    println!("link");
     print_links(base_url.as_str(), &doc, "link", "href");
 }
 
@@ -78,7 +76,6 @@ fn sanitize_link(base_url: &str, link: &str) -> Option<String> {
     }
 
     if INVALID_LINK_REGEX.is_match(link) {
-        println!("Invalid link: {}", link);
         return None;
     }
 
@@ -86,10 +83,8 @@ fn sanitize_link(base_url: &str, link: &str) -> Option<String> {
     let sanitized: String;
 
     if DOUBLE_SLASH_PREFIX.is_match(link) {
-        println!("Double slash prefix: {}", link);
         sanitized = format!("https:{}", link);
     } else if RELATIVE_LINK_PREFIX.is_match(link) {
-        println!("Relative link prefix: {}", link);
         sanitized = format!(
             "{}{}{}",
             base_url,
@@ -97,7 +92,6 @@ fn sanitize_link(base_url: &str, link: &str) -> Option<String> {
             RELATIVE_LINK_PREFIX.replace(link, "")
         );
     } else if !HTTP_PREFIX.is_match(link) {
-        println!("No HTTP prefix: {}", link);
         sanitized = format!("{}{}{}", base_url, maybe_slash, link);
     } else {
         sanitized = String::from(link);
