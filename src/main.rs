@@ -79,14 +79,10 @@ fn extract_document_from_url(client: &Client, url: &str) -> Document {
 }
 
 fn collect_links(document: &Document, base_url: &Url) -> Vec<String> {
-    let mut a_tag_links = collect_links_from_tags(document, base_url, "a", "href");
-    let mut script_tag_links = collect_links_from_tags(document, base_url, "script", "src");
-    let mut link_tag_links = collect_links_from_tags(document, base_url, "link", "href");
-    let mut result = vec![];
-    result.append(&mut a_tag_links);
-    result.append(&mut script_tag_links);
-    result.append(&mut link_tag_links);
-    result
+    let a_tag_links = collect_links_from_tags(document, base_url, "a", "href");
+    let script_tag_links = collect_links_from_tags(document, base_url, "script", "src");
+    let link_tag_links = collect_links_from_tags(document, base_url, "link", "href");
+    [&a_tag_links[..], &script_tag_links[..], &link_tag_links[..]].concat()
 }
 
 fn collect_links_from_tags(
