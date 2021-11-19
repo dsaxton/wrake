@@ -13,7 +13,40 @@ use select::predicate::Name;
 // Use a domain name instead of full URL, use reqwest::Url methods: https://docs.rs/reqwest/0.3.0/reqwest/struct.Url.html
 
 fn main() {
-    let app_matches = App::new("wrake")
+    let app_matches = build_app().get_matches();
+    let base_url =
+        Url::parse(app_matches.value_of("url").unwrap()).expect("Cannot parse url argument");
+    let proxy = app_matches.value_of("proxy");
+    let _depth = app_matches
+        .value_of("depth")
+        .unwrap()
+        .parse::<u8>()
+        .expect("Cannot parse depth argument");
+    let mut client = Client::builder();
+    if let Some(p) = proxy {
+        client = client
+            .proxy(Proxy::all(p).unwrap())
+            .danger_accept_invalid_certs(true)
+    }
+    let client = client.build().unwrap();
+    let base_response = client.get(base_url.as_str()).send().unwrap();
+    let body = base_response.text().unwrap();
+    let document = Document::from(body.as_str());
+    let mut result = vec![];
+    let mut a_tag_links = collect_links_from_tags(&document, base_url.as_str(), "a", "href");
+    let mut script_tag_links =
+        collect_links_from_tags(&document, base_url.as_str(), "script", "src");
+    let mut link_tag_links = collect_links_from_tags(&document, base_url.as_str(), "link", "href");
+    result.append(&mut a_tag_links);
+    result.append(&mut script_tag_links);
+    result.append(&mut link_tag_links);
+    for link in result {
+        println!("{}", link);
+    }
+}
+
+fn build_app() -> App<'static> {
+    App::new("wrake")
         .version("0.1.0")
         .about("Collect links from the given URL")
         .setting(AppSettings::ArgRequiredElseHelp)
@@ -36,46 +69,45 @@ fn main() {
                 .takes_value(true)
                 .required(false),
         )
-        .get_matches();
-
-    let base_url = Url::parse(app_matches.value_of("url").unwrap()).unwrap();
-    let proxy = app_matches.value_of("proxy");
-    let mut client = Client::builder();
-    if let Some(p) = proxy {
-        client = client
-            .proxy(Proxy::all(p).unwrap())
-            .danger_accept_invalid_certs(true)
-    }
-    let client = client.build().unwrap();
-    let initial_result = client.get(base_url.as_str()).send().unwrap();
-    let body = initial_result.text().unwrap();
-    let doc = Document::from(body.as_str());
-
-    print_links(base_url.as_str(), &doc, "a", "href");
-    print_links(base_url.as_str(), &doc, "script", "src");
-    print_links(base_url.as_str(), &doc, "link", "href");
+        .arg(
+            Arg::new("depth")
+                .short('d')
+                .long("depth")
+                .value_name("integer")
+                .about("Recursion depth")
+                .takes_value(true)
+                .required(false)
+                .default_value("3"),
+        )
 }
 
-fn print_links(base_url: &str, document: &Document, tag: &str, attr: &str) {
+fn collect_links_from_tags(
+    document: &Document,
+    base_url: &str,
+    tag: &str,
+    attribute: &str,
+) -> Vec<String> {
     document
         .find(Name(tag))
-        .filter_map(|n| n.attr(attr))
-        .for_each(|x| {
-            if let Some(link) = sanitize_link(base_url, x) {
-                println!("{}", link)
+        .filter_map(|n| {
+            if let Some(link) = n.attr(attribute) {
+                sanitize_link(base_url, link)
+            } else {
+                None
             }
-        });
+        })
+        .collect::<Vec<String>>()
 }
 
 fn sanitize_link(base_url: &str, link: &str) -> Option<String> {
     lazy_static! {
-        static ref BAD_LINK_REGEX: Regex = Regex::new("^(mailto|#|tel|javascript)").unwrap();
+        static ref BAD_LINK: Regex = Regex::new("^(mailto|#|tel|javascript)").unwrap();
         static ref DOUBLE_SLASH_PREFIX: Regex = Regex::new("^//").unwrap();
-        static ref RELATIVE_LINK_PREFIX: Regex = Regex::new("^.?/").unwrap();
+        static ref RELATIVE_LINK_PREFIX: Regex = Regex::new("^\\.?/").unwrap();
         static ref HTTP_PREFIX: Regex = Regex::new("^http").unwrap();
     }
 
-    if BAD_LINK_REGEX.is_match(link) {
+    if BAD_LINK.is_match(link) {
         return None;
     }
 
