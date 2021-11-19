@@ -29,17 +29,8 @@ fn main() {
             .danger_accept_invalid_certs(true)
     }
     let client = client.build().unwrap();
-    let base_response = client.get(base_url.as_str()).send().unwrap();
-    let body = base_response.text().unwrap();
-    let document = Document::from(body.as_str());
-    let mut result = vec![];
-    let mut a_tag_links = collect_links_from_tags(&document, base_url.as_str(), "a", "href");
-    let mut script_tag_links =
-        collect_links_from_tags(&document, base_url.as_str(), "script", "src");
-    let mut link_tag_links = collect_links_from_tags(&document, base_url.as_str(), "link", "href");
-    result.append(&mut a_tag_links);
-    result.append(&mut script_tag_links);
-    result.append(&mut link_tag_links);
+    let document = extract_document_from_url(&client, base_url.as_str());
+    let result = collect_links(&document, &base_url);
     for link in result {
         println!("{}", link);
     }
@@ -81,9 +72,26 @@ fn build_app() -> App<'static> {
         )
 }
 
+fn extract_document_from_url(client: &Client, url: &str) -> Document {
+    let response = client.get(url).send().unwrap();
+    let body = response.text().unwrap();
+    Document::from(body.as_str())
+}
+
+fn collect_links(document: &Document, base_url: &Url) -> Vec<String> {
+    let mut a_tag_links = collect_links_from_tags(document, base_url, "a", "href");
+    let mut script_tag_links = collect_links_from_tags(document, base_url, "script", "src");
+    let mut link_tag_links = collect_links_from_tags(document, base_url, "link", "href");
+    let mut result = vec![];
+    result.append(&mut a_tag_links);
+    result.append(&mut script_tag_links);
+    result.append(&mut link_tag_links);
+    result
+}
+
 fn collect_links_from_tags(
     document: &Document,
-    base_url: &str,
+    base_url: &Url,
     tag: &str,
     attribute: &str,
 ) -> Vec<String> {
@@ -99,7 +107,7 @@ fn collect_links_from_tags(
         .collect::<Vec<String>>()
 }
 
-fn sanitize_link(base_url: &str, link: &str) -> Option<String> {
+fn sanitize_link(base_url: &Url, link: &str) -> Option<String> {
     lazy_static! {
         static ref BAD_LINK: Regex = Regex::new("^(mailto|#|tel|javascript)").unwrap();
         static ref DOUBLE_SLASH_PREFIX: Regex = Regex::new("^//").unwrap();
@@ -111,20 +119,16 @@ fn sanitize_link(base_url: &str, link: &str) -> Option<String> {
         return None;
     }
 
-    let maybe_slash = if base_url.ends_with('/') { "" } else { "/" };
     let sanitized: String;
-
     if DOUBLE_SLASH_PREFIX.is_match(link) {
         sanitized = format!("https:{}", link);
     } else if RELATIVE_LINK_PREFIX.is_match(link) {
-        sanitized = format!(
-            "{}{}{}",
-            base_url,
-            maybe_slash,
-            RELATIVE_LINK_PREFIX.replace(link, "")
-        );
+        sanitized = base_url
+            .join(&RELATIVE_LINK_PREFIX.replace(link, ""))
+            .unwrap()
+            .to_string();
     } else if !HTTP_PREFIX.is_match(link) {
-        sanitized = format!("{}{}{}", base_url, maybe_slash, link);
+        sanitized = base_url.join(link).unwrap().to_string();
     } else {
         sanitized = String::from(link);
     }
