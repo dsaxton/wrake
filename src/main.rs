@@ -108,6 +108,8 @@ fn sanitize_link(base_url: &Url, link: &str) -> Option<String> {
         static ref BAD_LINK: Regex = Regex::new("^(mailto|#|tel|javascript)").unwrap();
         static ref DOUBLE_SLASH_PREFIX: Regex = Regex::new("^//").unwrap();
         static ref RELATIVE_LINK_PREFIX: Regex = Regex::new("^\\.?/").unwrap();
+        // FIXME: need to handle these cases separately and fix RELATIVE_LINK_PREFIX
+        // static ref ABSOLUTE_LINK_PREFIX: Regex = Regex::new("^/[^/]").unwrap();
         static ref HTTP_PREFIX: Regex = Regex::new("^http").unwrap();
     }
 
