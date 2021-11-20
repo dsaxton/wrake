@@ -119,6 +119,7 @@ fn sanitize_link(base_url: &Url, link: &str) -> Option<String> {
 
     let sanitized: String;
     if DOUBLE_SLASH_PREFIX.is_match(link) {
+        // does this make sense?
         sanitized = format!("https:{}", link);
     } else if RELATIVE_LINK_PREFIX.is_match(link) {
         sanitized = base_url
