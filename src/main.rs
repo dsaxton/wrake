@@ -134,3 +134,5 @@ fn sanitize_link(base_url: &Url, link: &str) -> Option<String> {
     }
     Some(sanitized)
 }
+
+// fn share_same_domain
