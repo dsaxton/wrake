@@ -73,6 +73,7 @@ fn build_app() -> App<'static> {
 }
 
 fn extract_document_from_url(client: &Client, url: &str) -> Document {
+    // fix the type of this and don't unwrap
     let response = client.get(url).send().unwrap();
     let body = response.text().unwrap();
     Document::from(body.as_str())
