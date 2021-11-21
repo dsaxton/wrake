@@ -126,4 +126,11 @@ fn sanitize_link(current_url: &Url, link: &str) -> Option<String> {
     Some(sanitized)
 }
 
-// fn share_same_domain
+fn _share_same_domain(left: &Url, right: &Url) -> bool {
+    if let Some(left_domain) = left.domain() {
+        if let Some(right_domain) = right.domain() {
+            return left_domain == right_domain;
+        }
+    }
+    false
+}
