@@ -1,10 +1,11 @@
-use clap::{App, AppSettings, Arg};
 use lazy_static::lazy_static;
 use regex::Regex;
 use reqwest::blocking::Client;
 use reqwest::{Proxy, Url};
 use select::document::Document;
 use select::predicate::Name;
+
+mod app;
 
 // Recursive search
 // Parse more tags
@@ -13,7 +14,7 @@ use select::predicate::Name;
 // Use a domain name instead of full URL, use reqwest::Url methods: https://docs.rs/reqwest/0.3.0/reqwest/struct.Url.html
 
 fn main() {
-    let app_matches = build_app().get_matches();
+    let app_matches = app::build_app().get_matches();
     let base_url =
         Url::parse(app_matches.value_of("url").unwrap()).expect("Cannot parse url argument");
     let proxy = app_matches.value_of("proxy");
@@ -22,68 +23,42 @@ fn main() {
         .unwrap()
         .parse::<u8>()
         .expect("Cannot parse depth argument");
+    let client = build_client(proxy);
+    let links = collect_links(&client, &base_url);
+    for link in links {
+        println!("{}", link);
+        let new_url = Url::parse(&link).unwrap();
+        if share_same_domain(&base_url, &new_url) {
+            let new_links = collect_links(&client, &base_url);
+            for new_link in new_links {
+                println!("{}", new_link);
+            }
+        }
+    }
+}
+
+fn build_client(proxy: Option<&str>) -> Client {
     let mut client = Client::builder();
     if let Some(p) = proxy {
         client = client
             .proxy(Proxy::all(p).unwrap())
             .danger_accept_invalid_certs(true)
     }
-    let client = client.build().unwrap();
-    let document = extract_document_from_url(&client, base_url.as_str());
-    let result = collect_links(&document, &base_url);
-    for link in result {
-        println!("{}", link);
-    }
+    client.build().unwrap()
 }
 
-fn build_app() -> App<'static> {
-    App::new("wrake")
-        .version("0.1.0")
-        .about("Collect links from the given URL")
-        .setting(AppSettings::ArgRequiredElseHelp)
-        .setting(AppSettings::DisableHelpSubcommand)
-        .arg(
-            Arg::new("url")
-                .short('u')
-                .long("url")
-                .value_name("string")
-                .about("Target URL")
-                .takes_value(true)
-                .required(true),
-        )
-        .arg(
-            Arg::new("proxy")
-                .short('p')
-                .long("proxy")
-                .value_name("string")
-                .about("Proxy through which to send requests")
-                .takes_value(true)
-                .required(false),
-        )
-        .arg(
-            Arg::new("depth")
-                .short('d')
-                .long("depth")
-                .value_name("integer")
-                .about("Recursion depth")
-                .takes_value(true)
-                .required(false)
-                .default_value("3"),
-        )
+fn collect_links(client: &Client, url: &Url) -> Vec<String> {
+    let document = extract_document_from_url(client, url);
+    let a_tag_links = collect_links_from_tags(&document, url, "a", "href");
+    let script_tag_links = collect_links_from_tags(&document, url, "script", "src");
+    let link_tag_links = collect_links_from_tags(&document, url, "link", "href");
+    [&a_tag_links[..], &script_tag_links[..], &link_tag_links[..]].concat()
 }
 
-fn extract_document_from_url(client: &Client, url: &str) -> Document {
-    // fix the type of this and don't unwrap
-    let response = client.get(url).send().unwrap();
+fn extract_document_from_url(client: &Client, url: &Url) -> Document {
+    let response = client.get(url.as_str()).send().unwrap();
     let body = response.text().unwrap();
     Document::from(body.as_str())
-}
-
-fn collect_links(document: &Document, base_url: &Url) -> Vec<String> {
-    let a_tag_links = collect_links_from_tags(document, base_url, "a", "href");
-    let script_tag_links = collect_links_from_tags(document, base_url, "script", "src");
-    let link_tag_links = collect_links_from_tags(document, base_url, "link", "href");
-    [&a_tag_links[..], &script_tag_links[..], &link_tag_links[..]].concat()
 }
 
 fn collect_links_from_tags(
@@ -126,11 +101,9 @@ fn sanitize_link(current_url: &Url, link: &str) -> Option<String> {
     Some(sanitized)
 }
 
-fn _share_same_domain(left: &Url, right: &Url) -> bool {
-    if let Some(left_domain) = left.domain() {
-        if let Some(right_domain) = right.domain() {
-            return left_domain == right_domain;
-        }
+fn share_same_domain(left: &Url, right: &Url) -> bool {
+    if let (Some(left_domain), Some(right_domain)) = (left.domain(), right.domain()) {
+        return left_domain == right_domain;
     }
     false
 }
