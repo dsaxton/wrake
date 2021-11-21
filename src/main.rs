@@ -23,7 +23,7 @@ fn main() {
         println!("{}", link);
         let new_url = Url::parse(&link).unwrap();
         if share_same_domain(&base_url, &new_url) {
-            let new_links = collect_links(&client, &base_url);
+            let new_links = collect_links(&client, &new_url);
             for new_link in new_links {
                 println!("{}", new_link);
             }
