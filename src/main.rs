@@ -104,13 +104,10 @@ fn collect_links_from_tags(
         .collect::<Vec<String>>()
 }
 
-fn sanitize_link(base_url: &Url, link: &str) -> Option<String> {
+fn sanitize_link(current_url: &Url, link: &str) -> Option<String> {
     lazy_static! {
-        static ref BAD_LINK: Regex = Regex::new("^(mailto|#|tel|javascript)").unwrap();
-        static ref DOUBLE_SLASH_PREFIX: Regex = Regex::new("^//").unwrap();
-        static ref RELATIVE_LINK_PREFIX: Regex = Regex::new("^\\.?/").unwrap();
-        // FIXME: need to handle these cases separately and fix RELATIVE_LINK_PREFIX
-        // static ref ABSOLUTE_LINK_PREFIX: Regex = Regex::new("^/[^/]").unwrap();
+        static ref BAD_LINK: Regex = Regex::new("^(mailto|#|tel|javascript|^\\s*$)").unwrap();
+        static ref RELATIVE_LINK: Regex = Regex::new("^\\.?/").unwrap();
         static ref HTTP_PREFIX: Regex = Regex::new("^http").unwrap();
     }
 
@@ -119,16 +116,10 @@ fn sanitize_link(base_url: &Url, link: &str) -> Option<String> {
     }
 
     let sanitized: String;
-    if DOUBLE_SLASH_PREFIX.is_match(link) {
-        // does this make sense?
-        sanitized = format!("https:{}", link);
-    } else if RELATIVE_LINK_PREFIX.is_match(link) {
-        sanitized = base_url
-            .join(&RELATIVE_LINK_PREFIX.replace(link, ""))
-            .unwrap()
-            .to_string();
+    if RELATIVE_LINK.is_match(link) {
+        sanitized = current_url.join(link).unwrap().to_string();
     } else if !HTTP_PREFIX.is_match(link) {
-        sanitized = base_url.join(link).unwrap().to_string();
+        return None;
     } else {
         sanitized = String::from(link);
     }
