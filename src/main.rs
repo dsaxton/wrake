@@ -7,12 +7,6 @@ use select::predicate::Name;
 
 mod app;
 
-// Recursive search
-// Parse more tags
-// Correctly handle relative links (what if we are not at the root level?)
-// Parse URLs and use to optionally exclude certain links from recursion
-// Use a domain name instead of full URL, use reqwest::Url methods: https://docs.rs/reqwest/0.3.0/reqwest/struct.Url.html
-
 fn main() {
     let app_matches = app::build_app().get_matches();
     let base_url =
