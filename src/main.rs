@@ -46,17 +46,20 @@ fn build_client(proxy: Option<&str>) -> Client {
 }
 
 fn collect_links(client: &Client, url: &Url) -> Vec<String> {
-    let document = extract_document_from_url(client, url);
+    let document = match extract_document_from_url(client, url) {
+        Ok(d) => d,
+        Err(_) => return vec![],
+    };
     let a_tag_links = collect_links_from_tags(&document, url, "a", "href");
     let script_tag_links = collect_links_from_tags(&document, url, "script", "src");
     let link_tag_links = collect_links_from_tags(&document, url, "link", "href");
     [&a_tag_links[..], &script_tag_links[..], &link_tag_links[..]].concat()
 }
 
-fn extract_document_from_url(client: &Client, url: &Url) -> Document {
-    let response = client.get(url.as_str()).send().unwrap();
-    let body = response.text().unwrap();
-    Document::from(body.as_str())
+fn extract_document_from_url(client: &Client, url: &Url) -> Result<Document, reqwest::Error> {
+    let response = client.get(url.as_str()).send()?;
+    let body = response.text()?;
+    Ok(Document::from(body.as_str()))
 }
 
 fn collect_links_from_tags(
