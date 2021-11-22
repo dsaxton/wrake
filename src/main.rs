@@ -57,7 +57,7 @@ fn extract_document_from_url(client: &Client, url: &Url) -> Document {
 
 fn collect_links_from_tags(
     document: &Document,
-    base_url: &Url,
+    url: &Url,
     tag: &str,
     attribute: &str,
 ) -> Vec<String> {
@@ -65,7 +65,7 @@ fn collect_links_from_tags(
         .find(Name(tag))
         .filter_map(|n| {
             if let Some(link) = n.attr(attribute) {
-                sanitize_link(base_url, link)
+                sanitize_link(url, link)
             } else {
                 None
             }
@@ -73,7 +73,7 @@ fn collect_links_from_tags(
         .collect::<Vec<String>>()
 }
 
-fn sanitize_link(current_url: &Url, link: &str) -> Option<String> {
+fn sanitize_link(url: &Url, link: &str) -> Option<String> {
     lazy_static! {
         static ref BAD_LINK: Regex = Regex::new("^(mailto|#|tel|javascript|^\\s*$)").unwrap();
         static ref RELATIVE_LINK: Regex = Regex::new("^\\.?/").unwrap();
@@ -86,7 +86,7 @@ fn sanitize_link(current_url: &Url, link: &str) -> Option<String> {
 
     let sanitized: String;
     if RELATIVE_LINK.is_match(link) {
-        sanitized = current_url.join(link).unwrap().to_string();
+        sanitized = url.join(link).unwrap().to_string();
     } else if !HTTP_PREFIX.is_match(link) {
         return None;
     } else {
