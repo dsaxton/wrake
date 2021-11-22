@@ -9,8 +9,7 @@ mod app;
 
 fn main() {
     let app_matches = app::build_app().get_matches();
-    let base_url =
-        Url::parse(app_matches.value_of("url").unwrap()).expect("Cannot parse url argument");
+    let url = Url::parse(app_matches.value_of("url").unwrap()).expect("Cannot parse url argument");
     let proxy = app_matches.value_of("proxy");
     let _depth = app_matches
         .value_of("depth")
@@ -18,17 +17,8 @@ fn main() {
         .parse::<u8>()
         .expect("Cannot parse depth argument");
     let client = build_client(proxy);
-    let links = collect_links(&client, &base_url);
-    for link in links {
-        println!("{}", link);
-        let new_url = Url::parse(&link).unwrap();
-        if share_same_domain(&base_url, &new_url) {
-            let new_links = collect_links(&client, &new_url);
-            for new_link in new_links {
-                println!("{}", new_link);
-            }
-        }
-    }
+    let links = collect_links(&client, &url);
+    links.iter().for_each(|link| println!("{}", link));
 }
 
 fn build_client(proxy: Option<&str>) -> Client {
@@ -84,18 +74,18 @@ fn sanitize_link(url: &Url, link: &str) -> Option<String> {
         return None;
     }
 
-    let sanitized: String;
+    let result: String;
     if RELATIVE_LINK.is_match(link) {
-        sanitized = url.join(link).unwrap().to_string();
+        result = url.join(link).unwrap().to_string();
     } else if !HTTP_PREFIX.is_match(link) {
         return None;
     } else {
-        sanitized = String::from(link);
+        result = String::from(link);
     }
-    Some(sanitized)
+    Some(result)
 }
 
-fn share_same_domain(left: &Url, right: &Url) -> bool {
+fn _share_same_domain(left: &Url, right: &Url) -> bool {
     if let (Some(left_domain), Some(right_domain)) = (left.domain(), right.domain()) {
         return left_domain == right_domain;
     }
