@@ -32,6 +32,6 @@ pub fn build_app() -> App<'static> {
                 .about("Recursion depth")
                 .takes_value(true)
                 .required(false)
-                .default_value("3"),
+                .default_value("2"),
         )
 }

@@ -1,4 +1,5 @@
 use lazy_static::lazy_static;
+use rayon::prelude::*;
 use regex::Regex;
 use reqwest::blocking::Client;
 use reqwest::{Proxy, Url};
@@ -11,14 +12,27 @@ fn main() {
     let app_matches = app::build_app().get_matches();
     let url = Url::parse(app_matches.value_of("url").unwrap()).expect("Cannot parse url argument");
     let proxy = app_matches.value_of("proxy");
-    let _depth = app_matches
+    let mut depth = app_matches
         .value_of("depth")
         .unwrap()
         .parse::<u8>()
         .expect("Cannot parse depth argument");
     let client = build_client(proxy);
     let links = collect_links(&client, &url);
-    links.iter().for_each(|link| println!("{}", link));
+    links.par_iter().for_each(|link| {
+        println!("{}", link);
+    });
+    while depth > 1 {
+        let links = links
+            .par_iter()
+            .filter(|link| share_same_domain(&url, &Url::parse(link).unwrap()))
+            .flat_map(|link| collect_links(&client, &Url::parse(link).unwrap()))
+            .collect::<Vec<String>>();
+        links.par_iter().for_each(|link| {
+            println!("{}", link);
+        });
+        depth -= 1;
+    }
 }
 
 fn build_client(proxy: Option<&str>) -> Client {
@@ -85,7 +99,7 @@ fn sanitize_link(url: &Url, link: &str) -> Option<String> {
     Some(result)
 }
 
-fn _share_same_domain(left: &Url, right: &Url) -> bool {
+fn share_same_domain(left: &Url, right: &Url) -> bool {
     if let (Some(left_domain), Some(right_domain)) = (left.domain(), right.domain()) {
         return left_domain == right_domain;
     }
