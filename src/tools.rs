@@ -26,13 +26,13 @@ pub fn collect_links(client: &Client, url: &Url) -> Vec<String> {
     [&a_tag_links[..], &script_tag_links[..], &link_tag_links[..]].concat()
 }
 
-pub fn extract_document_from_url(client: &Client, url: &Url) -> Result<Document, reqwest::Error> {
+fn extract_document_from_url(client: &Client, url: &Url) -> Result<Document, reqwest::Error> {
     let response = client.get(url.as_str()).send()?;
     let body = response.text()?;
     Ok(Document::from(body.as_str()))
 }
 
-pub fn collect_links_from_tags(
+fn collect_links_from_tags(
     document: &Document,
     url: &Url,
     tag: &str,
@@ -50,7 +50,7 @@ pub fn collect_links_from_tags(
         .collect::<Vec<String>>()
 }
 
-pub fn sanitize_link(url: &Url, link: &str) -> Option<String> {
+fn sanitize_link(url: &Url, link: &str) -> Option<String> {
     lazy_static! {
         static ref BAD_LINK: Regex = Regex::new("^(mailto|#|tel|javascript|^\\s*$)").unwrap();
         static ref RELATIVE_LINK: Regex = Regex::new("^\\.?/").unwrap();

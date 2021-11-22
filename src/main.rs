@@ -1,6 +1,6 @@
 use rayon::prelude::*;
 use reqwest::Url;
-use tools::*;
+use tools::{build_client, collect_links, share_same_domain};
 
 mod app;
 mod tools;
