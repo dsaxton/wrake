@@ -34,4 +34,12 @@ pub fn build_app() -> App<'static> {
                 .required(false)
                 .default_value("2"),
         )
+        .arg(
+            Arg::new("no-restrict-domain")
+                .short('n')
+                .long("no-restrict-domain")
+                .about("Do not restrict search to original domain")
+                .takes_value(false)
+                .required(false),
+        )
 }

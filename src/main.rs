@@ -12,6 +12,7 @@ fn main() {
     let app_matches = app::build_app().get_matches();
     let url = Url::parse(app_matches.value_of("url").unwrap()).expect("Cannot parse url argument");
     let proxy = app_matches.value_of("proxy");
+    let no_restrict_domain = app_matches.is_present("no-restrict-domain");
     let mut depth = app_matches
         .value_of("depth")
         .unwrap()
@@ -25,7 +26,9 @@ fn main() {
     while depth > 1 {
         let links = links
             .par_iter()
-            .filter(|link| share_same_domain(&url, &Url::parse(link).unwrap()))
+            .filter(|link| {
+                no_restrict_domain || share_same_domain(&url, &Url::parse(link).unwrap())
+            })
             .flat_map(|link| collect_links(&client, &Url::parse(link).unwrap()))
             .collect::<Vec<String>>();
         links.iter().for_each(|link| {
