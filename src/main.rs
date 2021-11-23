@@ -24,10 +24,9 @@ fn main() {
     while depth > 1 {
         let links = links
             .par_iter()
-            .filter(|link| {
-                no_restrict_domain || share_same_domain(&url, &Url::parse(link).unwrap())
-            })
-            .flat_map(|link| collect_links(&client, &Url::parse(link).unwrap()))
+            .map(|link| Url::parse(link).unwrap())
+            .filter(|link| no_restrict_domain || share_same_domain(&url, link))
+            .flat_map(|link| collect_links(&client, &link))
             .collect::<Vec<String>>();
         links.iter().for_each(|link| {
             println!("{}", link);
