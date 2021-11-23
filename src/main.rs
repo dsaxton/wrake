@@ -10,12 +10,13 @@ fn main() {
     let url = Url::parse(app_matches.value_of("url").unwrap()).expect("Cannot parse url argument");
     let proxy = app_matches.value_of("proxy");
     let no_restrict_domain = app_matches.is_present("no-restrict-domain");
+    let insecure = app_matches.is_present("insecure");
     let mut depth = app_matches
         .value_of("depth")
         .unwrap()
         .parse::<u8>()
         .expect("Cannot parse depth argument");
-    let client = build_client(proxy);
+    let client = build_client(proxy, insecure);
     let links = collect_links(&client, &url);
     links.iter().for_each(|link| {
         println!("{}", link);

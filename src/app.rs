@@ -42,4 +42,12 @@ pub fn build_app() -> App<'static> {
                 .takes_value(false)
                 .required(false),
         )
+        .arg(
+            Arg::new("insecure")
+                .short('k')
+                .long("insecure")
+                .about("Accept invalid certificates")
+                .takes_value(false)
+                .required(false),
+        )
 }
