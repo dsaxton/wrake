@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 use reqwest::blocking::Client;
-use reqwest::{Proxy, Url};
+use reqwest::{Error, Proxy, Url};
 use select::document::Document;
 use select::predicate::Name;
 
@@ -25,7 +25,7 @@ pub fn collect_links(client: &Client, url: &Url) -> Vec<String> {
     [&a_tag_links[..], &script_tag_links[..], &link_tag_links[..]].concat()
 }
 
-fn extract_document_from_url(client: &Client, url: &Url) -> Result<Document, reqwest::Error> {
+fn extract_document_from_url(client: &Client, url: &Url) -> Result<Document, Error> {
     let response = client.get(url.as_str()).send()?;
     let body = response.text()?;
     Ok(Document::from(body.as_str()))
