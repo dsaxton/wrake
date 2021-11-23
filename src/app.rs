@@ -54,7 +54,7 @@ pub fn build_app() -> App<'static> {
         )
         .arg(
             Arg::new("insecure-proxy")
-                .short('k')
+                .short('i')
                 .long("insecure-proxy")
                 .about("Accept invalid certificates for proxy")
                 .takes_value(false)

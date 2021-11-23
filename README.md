@@ -10,7 +10,7 @@ OPTIONS:
     -a, --user-agent <string>    User agent header [default: wrake]
     -d, --depth <integer>        Recursion depth [default: 2]
     -h, --help                   Print help information
-    -k, --insecure-proxy         Accept invalid certificates for proxy
+    -i, --insecure-proxy         Accept invalid certificates for proxy
     -n, --no-domain-filter       Do not restrict recursion to original domain
     -p, --proxy <string>         Proxy through which to send requests
     -u, --url <string>           Target URL
