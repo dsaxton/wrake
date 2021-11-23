@@ -51,7 +51,7 @@ fn collect_links_from_tags(
 
 fn format_link(url: &Url, link: &str) -> Option<String> {
     lazy_static! {
-        static ref BAD_LINK: Regex = Regex::new("^(mailto|#|tel|javascript|^\\s*$)").unwrap();
+        static ref BAD_LINK: Regex = Regex::new("^(mailto|#|tel|javascript|\\s*$)").unwrap();
         static ref RELATIVE_LINK: Regex = Regex::new("^\\.?/").unwrap();
         static ref HTTP_PREFIX: Regex = Regex::new("^http").unwrap();
     }
