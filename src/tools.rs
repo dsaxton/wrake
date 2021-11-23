@@ -59,16 +59,13 @@ fn format_link(url: &Url, link: &str) -> Option<String> {
     if BAD_LINK.is_match(link) {
         return None;
     }
-
-    let result: String;
     if RELATIVE_LINK.is_match(link) {
-        result = url.join(link).unwrap().to_string();
-    } else if !HTTP_PREFIX.is_match(link) {
-        return None;
-    } else {
-        result = String::from(link);
+        return Some(url.join(link).unwrap().to_string());
     }
-    Some(result)
+    if !HTTP_PREFIX.is_match(link) {
+        return None;
+    }
+    Some(String::from(link))
 }
 
 pub fn share_same_domain(left: &Url, right: &Url) -> bool {
