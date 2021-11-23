@@ -18,9 +18,7 @@ fn main() {
         .expect("Cannot parse depth argument");
     let client = build_client(proxy, insecure_proxy);
     let links = collect_links(&client, &url);
-    links.iter().for_each(|link| {
-        println!("{}", link);
-    });
+    links.iter().for_each(|link| println!("{}", link));
     while depth > 1 {
         let links = links
             .par_iter()
@@ -28,9 +26,7 @@ fn main() {
             .filter(|link| no_restrict_domain || share_same_domain(&url, link))
             .flat_map(|link| collect_links(&client, &link))
             .collect::<Vec<String>>();
-        links.iter().for_each(|link| {
-            println!("{}", link);
-        });
+        links.iter().for_each(|link| println!("{}", link));
         depth -= 1;
     }
 }
