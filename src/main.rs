@@ -10,7 +10,7 @@ fn main() {
     let url = Url::parse(app_matches.value_of("url").unwrap()).expect("Cannot parse url argument");
     let user_agent = app_matches.value_of("user-agent").unwrap();
     let proxy = app_matches.value_of("proxy");
-    let no_restrict_domain = app_matches.is_present("no-restrict-domain");
+    let no_domain_filter = app_matches.is_present("no-domain-filter");
     let insecure_proxy = app_matches.is_present("insecure-proxy");
     let mut depth = app_matches
         .value_of("depth")
@@ -24,7 +24,7 @@ fn main() {
         let links = links
             .par_iter()
             .map(|link| Url::parse(link).unwrap())
-            .filter(|link| no_restrict_domain || share_same_domain(&url, link))
+            .filter(|link| no_domain_filter || share_same_domain(&url, link))
             .flat_map(|link| collect_links(&client, &link))
             .collect::<Vec<String>>();
         links.iter().for_each(|link| println!("{}", link));

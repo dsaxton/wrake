@@ -45,9 +45,9 @@ pub fn build_app() -> App<'static> {
                 .default_value("2"),
         )
         .arg(
-            Arg::new("no-restrict-domain")
+            Arg::new("no-domain-filter")
                 .short('n')
-                .long("no-restrict-domain")
+                .long("no-domain-filter")
                 .about("Do not restrict recursion to original domain")
                 .takes_value(false)
                 .required(false),
