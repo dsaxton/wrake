@@ -20,7 +20,7 @@ pub fn build_app() -> App<'static> {
                 .short('a')
                 .long("user-agent")
                 .value_name("string")
-                .about("User agent header when sending requests")
+                .about("User agent header")
                 .takes_value(true)
                 .default_value("wrake")
                 .required(false),
