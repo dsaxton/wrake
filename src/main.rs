@@ -15,7 +15,7 @@ fn main() {
     let mut depth = app_matches
         .value_of("depth")
         .unwrap()
-        .parse::<u8>()
+        .parse::<i8>()
         .expect("Cannot parse depth argument");
     let client = build_client(proxy, insecure_proxy, user_agent);
     let links = collect_links(&client, &url);
