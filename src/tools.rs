@@ -8,9 +8,8 @@ use select::predicate::Name;
 pub fn build_client(proxy: Option<&str>, insecure: bool) -> Client {
     let mut client = Client::builder();
     if let Some(p) = proxy {
-        client = client
-            .proxy(Proxy::all(p).unwrap())
-            .danger_accept_invalid_certs(insecure)
+        let p = Proxy::all(p).expect("Invalid proxy string");
+        client = client.proxy(p).danger_accept_invalid_certs(insecure)
     }
     client.build().unwrap()
 }
