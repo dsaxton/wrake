@@ -43,10 +43,10 @@ pub fn build_app() -> App<'static> {
                 .required(false),
         )
         .arg(
-            Arg::new("insecure")
+            Arg::new("insecure-proxy")
                 .short('k')
-                .long("insecure")
-                .about("Accept invalid certificates")
+                .long("insecure-proxy")
+                .about("Accept invalid certificates for proxy")
                 .takes_value(false)
                 .required(false),
         )
