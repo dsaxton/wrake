@@ -5,11 +5,11 @@ use reqwest::{Proxy, Url};
 use select::document::Document;
 use select::predicate::Name;
 
-pub fn build_client(proxy: Option<&str>, insecure: bool) -> Client {
+pub fn build_client(proxy: Option<&str>, insecure_proxy: bool) -> Client {
     let mut client = Client::builder();
     if let Some(p) = proxy {
         let p = Proxy::all(p).expect("Invalid proxy string");
-        client = client.proxy(p).danger_accept_invalid_certs(insecure)
+        client = client.proxy(p).danger_accept_invalid_certs(insecure_proxy)
     }
     client.build().unwrap()
 }
