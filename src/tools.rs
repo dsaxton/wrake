@@ -41,7 +41,7 @@ fn collect_links_from_tags(
         .find(Name(tag))
         .filter_map(|n| {
             if let Some(link) = n.attr(attribute) {
-                sanitize_link(url, link)
+                format_link(url, link)
             } else {
                 None
             }
@@ -49,7 +49,7 @@ fn collect_links_from_tags(
         .collect::<Vec<String>>()
 }
 
-fn sanitize_link(url: &Url, link: &str) -> Option<String> {
+fn format_link(url: &Url, link: &str) -> Option<String> {
     lazy_static! {
         static ref BAD_LINK: Regex = Regex::new("^(mailto|#|tel|javascript|^\\s*$)").unwrap();
         static ref RELATIVE_LINK: Regex = Regex::new("^\\.?/").unwrap();
