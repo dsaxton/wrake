@@ -8,6 +8,7 @@ mod tools;
 fn main() {
     let app_matches = app::build_app().get_matches();
     let url = Url::parse(app_matches.value_of("url").unwrap()).expect("Cannot parse url argument");
+    let user_agent = app_matches.value_of("user-agent").unwrap();
     let proxy = app_matches.value_of("proxy");
     let no_restrict_domain = app_matches.is_present("no-restrict-domain");
     let insecure_proxy = app_matches.is_present("insecure-proxy");
@@ -16,10 +17,10 @@ fn main() {
         .unwrap()
         .parse::<u8>()
         .expect("Cannot parse depth argument");
-    let client = build_client(proxy, insecure_proxy);
+    let client = build_client(proxy, insecure_proxy, user_agent);
     let links = collect_links(&client, &url);
     links.iter().for_each(|link| println!("{}", link));
-    while depth > 1 {
+    while depth > 0 {
         let links = links
             .par_iter()
             .map(|link| Url::parse(link).unwrap())

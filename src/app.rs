@@ -16,6 +16,16 @@ pub fn build_app() -> App<'static> {
                 .required(true),
         )
         .arg(
+            Arg::new("user-agent")
+                .short('a')
+                .long("user-agent")
+                .value_name("string")
+                .about("User agent header when sending requests")
+                .takes_value(true)
+                .default_value("wrake")
+                .required(false),
+        )
+        .arg(
             Arg::new("proxy")
                 .short('p')
                 .long("proxy")
