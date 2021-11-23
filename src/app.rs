@@ -48,7 +48,7 @@ pub fn build_app() -> App<'static> {
             Arg::new("no-restrict-domain")
                 .short('n')
                 .long("no-restrict-domain")
-                .about("Do not restrict search to original domain")
+                .about("Do not restrict recursion to original domain")
                 .takes_value(false)
                 .required(false),
         )
