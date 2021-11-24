@@ -1,5 +1,5 @@
 ```
-wrake 0.1.0
+wrake 0.1.1
 
 Collect links from the given URL
 
