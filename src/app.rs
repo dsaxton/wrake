@@ -41,8 +41,8 @@ pub fn build_app() -> App<'static> {
                 .value_name("integer")
                 .about("Recursion depth")
                 .takes_value(true)
-                .required(false)
-                .default_value("2"),
+                .default_value("2")
+                .required(false),
         )
         .arg(
             Arg::new("no-domain-filter")
