@@ -2,7 +2,7 @@ use clap::{App, AppSettings, Arg};
 
 pub fn build_app() -> App<'static> {
     App::new("wrake")
-        .version("0.1.0")
+        .version("0.2.0")
         .about("Collect links from the given URL")
         .setting(AppSettings::ArgRequiredElseHelp)
         .setting(AppSettings::DisableHelpSubcommand)
