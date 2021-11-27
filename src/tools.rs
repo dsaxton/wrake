@@ -52,20 +52,16 @@ fn collect_links_from_tags(
 fn format_link(url: &Url, link: &str) -> Option<String> {
     lazy_static! {
         static ref BAD_LINK: Regex = Regex::new("^(mailto|#|tel|javascript|\\s*$)").unwrap();
-        static ref RELATIVE_LINK: Regex = Regex::new("^\\.?/").unwrap();
         static ref HTTP_PREFIX: Regex = Regex::new("^http").unwrap();
     }
 
     if BAD_LINK.is_match(link) {
         return None;
     }
-    if RELATIVE_LINK.is_match(link) {
-        return Some(url.join(link).unwrap().to_string());
+    if HTTP_PREFIX.is_match(link) {
+        return Some(String::from(link));
     }
-    if !HTTP_PREFIX.is_match(link) {
-        return None;
-    }
-    Some(String::from(link))
+    Some(url.join(link).unwrap().to_string())
 }
 
 pub fn share_same_domain(left: &Url, right: &Url) -> bool {
@@ -88,6 +84,7 @@ mod tests {
             ("/hello", "https://example.com/hello"),
             ("/hello.js", "https://example.com/hello.js"),
             ("./hello.js", "https://example.com/hello.js"),
+            ("hello.js", "https://example.com/hello.js"),
         ] {
             let result = format_link(&url, link).unwrap();
             assert_eq!(result, expected);
