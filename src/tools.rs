@@ -74,3 +74,53 @@ pub fn share_same_domain(left: &Url, right: &Url) -> bool {
     }
     false
 }
+
+#[cfg(test)]
+mod tests {
+    use super::format_link;
+    use reqwest::Url;
+
+    #[test]
+    fn test_format_link_relative() {
+        let url_str = "https://example.com";
+        let url = Url::parse(url_str).unwrap();
+        for (link, expected) in [
+            ("./hello", format!("{}{}", url_str, "/hello")),
+            ("/hello", format!("{}{}", url_str, "/hello")),
+            ("/hello.js", format!("{}{}", url_str, "/hello.js")),
+            ("./hello.js", format!("{}{}", url_str, "/hello.js")),
+        ] {
+            let result = format_link(&url, link).unwrap();
+            assert_eq!(result, expected);
+        }
+    }
+
+    #[test]
+    fn test_format_link_absolute() {
+        let url_str = "https://example.com";
+        let url = Url::parse(url_str).unwrap();
+        for (link, expected) in [
+            ("//hello.com", "https://hello.com/"),
+            ("//hello.com/some/path", "https://hello.com/some/path"),
+            ("//hello.com/some/path/", "https://hello.com/some/path/"),
+        ] {
+            let result = format_link(&url, link).unwrap();
+            assert_eq!(result, expected);
+        }
+    }
+
+    #[test]
+    fn test_format_link_invalid() {
+        let url_str = "https://example.com";
+        let url = Url::parse(url_str).unwrap();
+        for link in [
+            "#some-anchor",
+            "mailto:bob@example.com",
+            "javascript:something",
+            "tel:1234567",
+        ] {
+            let result = format_link(&url, link);
+            assert!(result.is_none());
+        }
+    }
+}
