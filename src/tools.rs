@@ -82,13 +82,12 @@ mod tests {
 
     #[test]
     fn test_format_link_relative() {
-        let url_str = "https://example.com";
-        let url = Url::parse(url_str).unwrap();
+        let url = Url::parse("https://example.com").unwrap();
         for (link, expected) in [
-            ("./hello", format!("{}{}", url_str, "/hello")),
-            ("/hello", format!("{}{}", url_str, "/hello")),
-            ("/hello.js", format!("{}{}", url_str, "/hello.js")),
-            ("./hello.js", format!("{}{}", url_str, "/hello.js")),
+            ("./hello", "https://example.com/hello"),
+            ("/hello", "https://example.com/hello"),
+            ("/hello.js", "https://example.com/hello.js"),
+            ("./hello.js", "https://example.com/hello.js"),
         ] {
             let result = format_link(&url, link).unwrap();
             assert_eq!(result, expected);
@@ -97,8 +96,7 @@ mod tests {
 
     #[test]
     fn test_format_link_absolute() {
-        let url_str = "https://example.com";
-        let url = Url::parse(url_str).unwrap();
+        let url = Url::parse("https://example.com").unwrap();
         for (link, expected) in [
             ("//hello.com", "https://hello.com/"),
             ("//hello.com/some/path", "https://hello.com/some/path"),
@@ -111,8 +109,7 @@ mod tests {
 
     #[test]
     fn test_format_link_invalid() {
-        let url_str = "https://example.com";
-        let url = Url::parse(url_str).unwrap();
+        let url = Url::parse("https://example.com").unwrap();
         for link in [
             "#some-anchor",
             "mailto:bob@example.com",
