@@ -11,7 +11,7 @@ OPTIONS:
     -d, --depth <integer>        Recursion depth [default: 2]
     -h, --help                   Print help information
     -i, --insecure-proxy         Accept invalid certificates for proxy
-    -n, --no-domain-filter       Do not restrict recursion to original domain
+    -n, --no-domain-filter       Do not restrict to original domain
     -p, --proxy <string>         Proxy through which to send requests
     -u, --url <string>           Target URL
     -V, --version                Print version information
