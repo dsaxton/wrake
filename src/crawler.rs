@@ -1,12 +1,12 @@
-use anyhow::{Result};
+use anyhow::Result;
 use reqwest::{Client, Proxy, Url};
 use scraper::{Html, Selector};
 use std::time::Duration;
 
 pub struct Crawler {
-    client:       Client,
+    client: Client,
     start_domain: String,
-    filter:       bool,
+    filter: bool,
 }
 
 impl Crawler {
@@ -18,7 +18,9 @@ impl Crawler {
 
         if let Some(p) = &args.proxy {
             let proxy = Proxy::all(p).map_err(|_| anyhow::anyhow!("invalid proxy"))?;
-            builder = builder.proxy(proxy).danger_accept_invalid_certs(args.insecure_proxy);
+            builder = builder
+                .proxy(proxy)
+                .danger_accept_invalid_certs(args.insecure_proxy);
         }
         let client = builder.build()?;
 
@@ -27,27 +29,44 @@ impl Crawler {
             .ok_or_else(|| anyhow::anyhow!("cannot extract domain"))?
             .to_owned();
 
-        Ok(Self { client, start_domain, filter: !args.no_domain_filter })
+        Ok(Self {
+            client,
+            start_domain,
+            filter: !args.no_domain_filter,
+        })
     }
 
-    pub async fn fetch_links(&self, url: &str) -> Result<Vec<String>> {
-        let body = self.client.get(url).send().await?.text().await?;
+    pub async fn fetch_links(&self, url: &str) -> Vec<String> {
+        let body = match self.client.get(url).send().await {
+            Ok(resp) => match resp.text().await {
+                Ok(t) => t,
+                Err(_) => return vec![],
+            },
+            Err(_) => return vec![],
+        };
         let doc = Html::parse_document(&body);
         let selector = Selector::parse("a[href], link[href], script[src]").unwrap();
 
         let mut links = Vec::new();
         for node in doc.select(&selector) {
-            let raw = match node.value().attr("href").or_else(|| node.value().attr("src")) {
+            let raw = match node
+                .value()
+                .attr("href")
+                .or_else(|| node.value().attr("src"))
+            {
                 Some(v) => v.trim(),
                 None => continue,
             };
-            let abs = self.abs_url(url, raw)?;
+            let abs = match self.abs_url(url, raw) {
+                Ok(u) => u,
+                Err(_) => continue,
+            };
             if self.filter && !self.same_domain(&abs) {
                 continue;
             }
             links.push(abs);
         }
-        Ok(links)
+        links
     }
 
     pub fn same_domain(&self, url: &str) -> bool {

@@ -31,7 +31,7 @@ async fn main() -> anyhow::Result<()> {
 
         queue.clear();
         for job in tasks {
-            for link in job.await?? {
+            for link in job.await? {
                 if seen.insert(link.clone()) {
                     println!("{link}");
                     if crawler.same_domain(&link) {
