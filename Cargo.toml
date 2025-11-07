@@ -1,0 +1,19 @@
+[package]
+name = "wrake"
+version = "0.4.1"
+edition = "2021"
+description = "Collect links from the given URL"
+homepage = "https://www.github.com/dsaxton/wrake"
+documentation = "https://www.github.com/dsaxton/wrake"
+repository = "https://www.github.com/dsaxton/wrake"
+readme = "README.md"
+keywords = ["crawler", "web-crawler", "web"]
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "gzip"] }
+scraper = "0.17"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+url = "2"
