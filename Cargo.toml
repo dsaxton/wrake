@@ -1,6 +1,6 @@
 [package]
 name = "wrake"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2021"
 description = "Collect links from the given URL"
 homepage = "https://www.github.com/dsaxton/wrake"
